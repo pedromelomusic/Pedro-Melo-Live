@@ -1,0 +1,4 @@
+"use client";
+import {useEffect} from 'react';
+export default function Enhancements(){useEffect(()=>{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});const context=(document as any).modelContext;if(!context?.registerTool)return;const life=new AbortController();Promise.resolve(context.registerTool({name:'read_now_playing',description:'Read the current song and whether song requests are open.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:true},async execute(input:any){if(!input||Object.keys(input).length)throw Error('No arguments accepted');const r=await fetch('/api/live');if(!r.ok)throw Error('Live connection unavailable');const s:any=await r.json();return {now:s.now,requestsOpen:s.settings.requestsOpen}}},{signal:life.signal})).catch(()=>{});return()=>life.abort()},[]);return null}
+

@@ -1,0 +1,3 @@
+self.addEventListener('install',()=>self.skipWaiting());
+self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
+self.addEventListener('fetch',e=>{if(e.request.mode==='navigate'&&new URL(e.request.url).pathname==='/'){e.respondWith(fetch(e.request).catch(()=>new Response('<!doctype html><html lang="pt"><meta name="viewport" content="width=device-width"><title>Pedro Melo Live</title><body style="background:#111715;color:#d2ed80;font:20px Arial;padding:40px"><h1>Pedro Melo Live</h1><p>Estás offline. Volta a ligar-te para pedir uma música.</p><p>You’re offline. Reconnect to request a song.</p><a style="color:inherit" href="/">Tentar novamente / Try again</a></body></html>',{headers:{'Content-Type':'text/html; charset=utf-8'}})))}});
