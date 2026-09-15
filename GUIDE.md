@@ -1,45 +1,77 @@
-# Pedro Melo Live — v0.1
+# Pedro Melo Live — v0.5
 
-## Usar no concerto
-1. Abre `/admin` e entra na conta ChatGPT autorizada. O email autorizado vive no servidor (`ADMIN_EMAIL`), nunca no código público.
-2. Mantém o painel aberto no iPad. Os pedidos atualizam a cada 10 segundos.
-3. Usa “Tocar agora” para publicar a música. “Marcar tocada” arquiva o pedido; são ações separadas. “Intervalo” limpa o Now Playing.
-4. Podes pausar novos pedidos, corrigir links e exportar os 1000 pedidos mais recentes em JSON. Exporta periodicamente; apagar elimina TODOS os pedidos, incluindo os que não aparecem na lista.
-5. Antes do concerto, testa com dois dispositivos. A publicação inicial é privada: abre o acesso público nas definições do Site antes de partilhar um QR. O painel continua protegido pela autorização no servidor.
-6. Cria um QR para o URL público final, de preferência um domínio teu para poderes mudar de alojamento sem reimprimir. Testa sem sessão iniciada. Não uses o endereço localhost no QR.
-7. No iPhone/iPad: Safari → Partilhar → Adicionar ao ecrã principal. Android: menu do navegador → Instalar/adicionar. Os pedidos e o Now Playing precisam de internet; offline é mostrado um aviso e nenhum pedido é falsamente confirmado.
+Entrega local validada em 15 de setembro de 2026. A publicação continua bloqueada por falta de escrita em `.git`; o domínio continua na versão publicada 1. Não distribuir os novos QR como se esta versão já estivesse publicada.
 
-## O que está na v0.1
-- Página mobile-first PT/EN, preferência de idioma guardada apenas no dispositivo.
-- Pedro Melo, Giant’s Magazine, Pete On The Radio; Spotify, Instagram, YouTube, Twitch reais.
-- WhatsApp para aulas com o número fornecido.
-- Espaço de crowdfunding sem inventar campanha, valor angariado ou meta. Adicionar link no painel quando existir.
-- Pedidos persistidos em D1, nome opcional, Now Playing partilhado, pausa e estado tocada.
-- Painel protegido por autenticação ChatGPT e email autorizado; verificação em TODOS os endpoints de gestão.
-- Manifesto PWA e aviso offline. Sem bibliotecas ou fontes externas no percurso público.
-- Proteção básica: validação, consultas parametrizadas, origem nas escritas, honeypot e limite de 3 pedidos/minuto por IP/dia pseudonimizado. Redes partilhadas podem atingir o mesmo limite. Para grandes públicos, evoluir para um controlo por visitante com Turnstile.
-- Dados nunca usados para mailing ou analytics. Nome é opcional. Sem publicação da lista de pedidos.
+## Novidades
 
-## Arquitetura e publicação
-Frontend React/Vinext → APIs same-origin → Cloudflare Worker → D1 (SQLite). Não há Tally/Sheets/Make obrigatórios nem cadeias de automações. Código e migrações acompanham o projeto. Não foi confirmado um preço de alojamento: verificar os limites e custos do plano antes do lançamento público.
+- Páginas individuais `/projetos/pedro`, `/projetos/giants` e `/projetos/pete`, em PT/EN, com estilos próprios.
+- Pedro Melo: “Sina”, Spotify, bio editável, agenda e publicações Instagram selecionadas.
+- Giant’s Magazine: The Storyteller no Bandcamp, bio, agenda e entrada para a campanha quando existir um link.
+- Pete On The Radio: Twitch incorporada, Discord e acesso aos pedidos.
+- Painel dividido em No palco, Eventos, Repertório, Tips, Conteúdos e Dados e ligações; seletor de idioma independente.
+- Tips por PayPal, Revolut e MB WAY através do Tipme, associadas a um pedido ou independentes.
+- Backup consistente, pré-visualização e restauração dos dados musicais, conteúdos e tips; cópia anterior temporária.
+- Verificação explícita de contactos antes de criar a inscrição confirmada destinada ao Make.
+- Consulta manual do volume de dados. Não calcula faturas nem promete custos ilimitados gratuitos.
 
-No Sites: configurar `ADMIN_EMAIL` como segredo de produção; gerar migrações; compilar; guardar versão com o código e migrações; publicar. A base D1 é declarada por `.openai/hosting.json`; a plataforma cria e aplica as migrações. Não colocar credenciais nesse ficheiro.
+## Operação das tips
 
-Desenvolvimento com Node 22.13+ e npm: `npm run install:ci`, copiar `.env.example` para `.env`, `npm run build`; aplicar cada migração local uma vez com `node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_tan_nicolaos.sql`; depois `npm run dev`.
+Cada pedido gratuito vale um voto. Cada euro inteiro recebido e confirmado acrescenta um voto à canção associada. Arredonda-se por tip para baixo: 2,90 € valem dois votos extra. Não existe garantia de execução da canção. Uma tip independente não atribui votos.
 
-O ambiente local simula a conta `seedy@sites.test` somente em loopback. Para testar administração local, usar esse email em `.env`; nunca em produção. `.env.example` fica vazio de dados pessoais.
+O visitante prepara a tip, copia uma referência e abre o serviço escolhido. O link externo não confirma um pagamento. Pedro consulta o serviço e, em Tips, regista o valor efetivamente recebido e o identificador da transação. A confirmação exige uma caixa explícita; identificadores repetidos no mesmo fornecedor são recusados. Reembolsos já efetuados no fornecedor podem ser registados e retiram os votos correspondentes. O painel não movimenta dinheiro nem emite reembolsos.
 
-Para alojamento independente Cloudflare: criar D1, aplicar as migrações, configurar Worker e assets a partir da configuração gerada e `ADMIN_EMAIL`. A autenticação atual depende do dispatcher Sites; antes de migrar, substituir os helpers por uma autenticação verificada (por exemplo Cloudflare Access) e não confiar em headers enviados pelo visitante. Não publicar simplesmente o Worker fora de Sites sem essa adaptação. Os dados D1 são SQLite e podem ser exportados; o painel exporta pedidos, não é um backup integral. Implementar backup de toda a base no alojamento escolhido.
+Os três links fornecidos estão configurados. Não há confirmação automática de pagamentos nesta entrega: isso exige contas/API dos fornecedores e validação dos respetivos eventos. A referência ajuda a conciliação manual; a disponibilidade do campo de mensagem depende do fornecedor. O painel mostra as 100 tips mais recentes do evento e as independentes; o backup inclui os registos completos dentro dos limites abaixo.
 
-## Roadmap
-v0.2: sessões de concerto, ranking por música normalizada, repertório pesquisável, exportação completa paginada e retenção automática de pedidos.
-v0.3: letras de músicas próprias com confirmação de direitos, modos Concert/Busking/Twitch, QR por evento e analytics agregados sem rastreio individual.
-v0.4: integrações opcionais por webhook com Make, Discord, WhatsApp/ManyChat; consentimento separado para comunicações. Nenhuma subscrição automática ao pedir uma música.
-Crowdfunding: link para campanha externa primeiro; sincronização de progresso só com dados reais e integração fiável. Nunca processar pagamentos no MVP.
+## Conteúdos
 
-## Antes de abrir ao público
-- Rever texto dos projetos e acrescentar o link Giant’s Magazine e campanha.
-- Confirmar acesso ao painel na conta autorizada e bloqueio de outra conta.
-- Abrir a página ao público e testar pedido/Now Playing entre dois dispositivos.
-- Definir rotina de exportação e apagamento depois dos eventos.
-- Confirmar custos, domínio e QR final. A revisão inicial privada não substitui este teste público.
+Em Conteúdos, editar bios, datas confirmadas, links das tips e até seis URLs de publicações ou reels públicos do Instagram. Não foram inventadas datas, letras nem publicações. O feed automático do Instagram fica dependente da ligação de uma conta compatível; atualmente existe incorporação de publicações selecionadas e o link do perfil.
+
+Os leitores externos só são carregados após clicar em reproduzir. A disponibilidade depende dos serviços originais, das permissões de incorporação e do browser. A Twitch exige o domínio no parâmetro `parent`. Cada leitor mantém um link para abrir o serviço original.
+
+## Backup e restauração
+
+Em Dados e ligações, criar um backup, escolher o JSON e rever os totais e as sessões antes de escrever RESTAURAR. É criado um ficheiro do estado atual, descarregável durante 24 horas. A restauração substitui canções, letras, sessões, alinhamentos, pedidos, métricas, tips, conteúdos e links, incluindo a sessão ativa.
+
+Contactos, consentimentos, credenciais e filas de comunicações não são substituídos por um backup musical. Os contactos têm exportação privada separada. Esta entrega não inclui restauro integral dos fornecedores externos nem reativação de consentimentos a partir de ficheiros antigos.
+
+O snapshot é lido numa transação D1. A aplicação do backup usa uma única transação com uma revisão global: alterações após a pré-visualização causam recusa e exigem nova revisão. Uma exportação grande pendente também impede a substituição. Repetir a confirmação de um restauro concluído não o aplica novamente.
+
+Limites por backup/restauro: 8 MiB, 2 000 canções, 500 sessões, 25 000 entradas de alinhamento, 25 000 pedidos, 25 000 linhas de métricas e 10 000 tips. Os limites são verificados; não há truncagem silenciosa. As exportações grandes de pedidos da v0.4 continuam disponíveis no servidor, mas não equivalem a um snapshot musical consistente e não podem ser importadas como tal. Para volumes acima destes limites, falta um restauro por etapas com bloqueio de escrita ou snapshot nativo do alojamento.
+
+As migrações `0005_backstage.sql` e `0006_verification.sql` seguem as anteriores. Os triggers de revisão em `0005` têm fonte em `db/revision-triggers.sql`; são SQL intencional porque não são representados pelos snapshots Drizzle. Preservá-los em futuras alterações de schema. Nunca reaplicar migrações já executadas.
+
+## Discord, contactos e agendamento
+
+O webhook Discord recebido foi guardado como segredo de produção, fora do código e dos ficheiros entregues. A revisão de ambiente será aplicada na próxima publicação. `INTEGRATIONS_ENABLED=false`: não foram enviados testes nem notificações reais.
+
+Make e ManyChat continuam por configurar. Quando existir Make, ativar apenas os canais efetivamente preparados em `COMMUNICATION_CHANNELS`. O cenário recebe primeiro `verification_requested`, com a ligação de confirmação e o contacto. Deve enviar essa ligação exclusivamente para confirmar a titularidade do contacto. O token expira em 24 horas e é guardado apenas como hash na tabela de desafios; a ligação em claro permanece temporariamente na fila necessária à entrega. Clicar na ligação e confirmar cria `communication_opt_in` com `contactVerified:true`. Confirmações repetidas não duplicam esse evento.
+
+Só depois desse evento pode o cenário inscrever o contacto em novidades, respeitando o canal, o consentimento, a validade e as regras do fornecedor. Pedidos de músicas não inscrevem ninguém. A retirada elimina o contacto local, cancela a fila e invalida os desafios; o cenário deve processar a retirada no fornecedor. O nome de utilizador Instagram/WhatsApp não substitui a configuração de uma API de mensagens.
+
+O endpoint protegido `/api/maintenance` está preparado para um agendador externo, mas nenhum agendamento foi ativado. Usar `MAINTENANCE_SECRET` aleatório com pelo menos 32 caracteres, transmitido no header Bearer, nunca no URL. O guia histórico explica o ritmo e a execução. Só ativar envios depois de preparar e testar o cenário e a identidade dos contactos. O Discord divulga Now Playing; os dados de contacto não são enviados para o Discord.
+
+## Validação
+
+- Compilação de produção e TypeScript.
+- Páginas de projetos e tips a 390 px; sem erros JavaScript nem excesso de largura.
+- Todas as áreas do painel em PT/EN a 390 px.
+- Base de testes separada: tips pendentes, confirmação, referência repetida, conflitos, reembolso parcial/total e tips independentes.
+- Backup inválido recusado, cópia anterior descarregável, prévia desatualizada recusada, substituição transacional e repetição segura.
+- Inscrição pendente, confirmação explícita, deduplicação e retirada com token invalidado; nenhum envio real.
+- Datas impossíveis recusadas; edição/restauro de conteúdo e consulta de volume.
+
+Testes reutilizáveis: `tests/v05-regression.cjs` e `tests/v05-verification.cjs`. São testes destrutivos de restauro destinados exclusivamente a uma base local isolada na porta 5174. Não executar sobre os dados de Pedro nem sobre o domínio real. Os testes da v0.4 documentam a validação anterior de exportações de 24 001 pedidos; não foram repetidos como ensaio de volume nesta versão.
+
+## Próximos passos
+
+1. Resolver a escrita do repositório, publicar a v0.5 no Site existente preservando acesso e segredos, e validar no domínio com Pedro.
+2. Rever as bios PT/EN, acrescentar datas confirmadas, publicações Instagram e o link da campanha.
+3. Configurar Make/fornecedores, testar a confirmação de contactos e estabelecer agendamento antes de ativar envios.
+4. Ligar APIs de pagamento para conciliação automática, mantendo confirmação de eventos no servidor.
+5. Se o volume justificar, ampliar restauro, paginação de tips, métricas de consumo e alertas de custos do alojamento.
+
+
+## Instalação e operação de base
+
+Consultar [o guia v0.4](docs/v0.4.md) para instalação, operação de eventos, retenção e exportações grandes. Na instalação, aplicar também as migrações 0005_backstage.sql e 0006_verification.sql depois das anteriores. As novidades e limitações deste guia v0.5 prevalecem sobre o roadmap e as descrições antigas de confirmação de contactos.
+

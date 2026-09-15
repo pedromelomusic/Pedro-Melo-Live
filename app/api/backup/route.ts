@@ -1,0 +1,2 @@
+import {admin,json} from '../../data';import {consistentBackup} from '../../backups';
+export async function GET(){if(!await admin())return json({error:'forbidden'},403);try{const b=await consistentBackup();return new Response(b.text,{headers:{'Content-Type':'application/json','Content-Disposition':'attachment; filename="pedro-melo-backup-'+b.data.snapshot+'.json"','Cache-Control':'no-store'}})}catch{return json({error:'backup_too_large',message:'Snapshot limitado a 8 MiB; usa as exportações de grande volume.'},413)}}

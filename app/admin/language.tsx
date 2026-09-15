@@ -1,0 +1,6 @@
+"use client";
+import {createContext,useContext,useEffect,useState} from 'react';
+const Language=createContext<'pt'|'en'>('pt');
+export function AdminLanguage({children}:{children:React.ReactNode}){const [lang,L]=useState<'pt'|'en'>('pt');useEffect(()=>{L(localStorage.getItem('admin-language')==='en'?'en':'pt')},[]);return <Language.Provider value={lang}><div className="admin-language"><span>Pedro Melo · Backstage</span><button onClick={()=>{const next=lang==='pt'?'en':'pt';L(next);localStorage.setItem('admin-language',next)}} aria-label={lang==='pt'?'Mudar idioma do painel':'Change dashboard language'}>{lang==='pt'?'PT → EN':'EN → PT'}</button></div>{children}</Language.Provider>}
+const exceptions:Record<string,[string,string]>={'Terminar / Intervalo · Finish / Break':['Terminar / Intervalo','Finish / Break'],'Recarrega ou descarta a edição antes de guardar.':['Recarrega ou descarta a edição antes de guardar.','Reload or discard changes before saving.']};
+export function useAdmin(){const lang=useContext(Language);return (pt:string,en?:string)=>{if(en!==undefined)return lang==='pt'?pt:en;if(exceptions[pt])return exceptions[pt][lang==='pt'?0:1];const parts=pt.split(' / ');return parts.length===2?parts[lang==='pt'?0:1]:pt}}

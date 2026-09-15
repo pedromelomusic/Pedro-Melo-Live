@@ -1,0 +1,4 @@
+export const defaultLinks:Record<string,string>={spotify:'https://open.spotify.com/artist/5PtQjgcTbbH0ufnHVtVpVW',instagram:'https://instagram.com/pedromelomusic',youtube:'https://youtube.com/c/opedromelo',twitch:'https://twitch.tv/peteontheradio',whatsapp:'https://wa.me/pedromelomusic',pedro:'https://open.spotify.com/artist/5PtQjgcTbbH0ufnHVtVpVW',pete:'https://twitch.tv/peteontheradio',giants:'',crowdfunding:''};
+export const initialSongs=[{id:'song-cancao-do-engate',title:'Canção do Engate',artist:'Tiago Bettencourt'},{id:'song-dead-sea',title:'Dead Sea',artist:'The Lumineers'},{id:'song-dont-look-back-in-anger',title:"Don't Look Back In Anger",artist:'Oasis'}];
+export const songStates=['available','reserved','playing','played','hidden'] as const;
+export type Song={id:string,title:string,artist:string,status:string,lyrics:string,lyricsApproved:number,revision:number};

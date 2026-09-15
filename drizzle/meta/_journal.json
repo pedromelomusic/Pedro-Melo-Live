@@ -8,6 +8,48 @@
       "when": 1789336877510,
       "tag": "0000_tan_nicolaos",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789339473973,
+      "tag": "0001_repertoire",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789367496502,
+      "tag": "0002_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1789394636334,
+      "tag": "0003_operations",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789394934134,
+      "tag": "0004_export_jobs",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1789419555448,
+      "tag": "0005_backstage",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1789419742796,
+      "tag": "0006_verification",
+      "breakpoints": true
     }
   ]
 }

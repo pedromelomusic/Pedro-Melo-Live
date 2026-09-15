@@ -1,0 +1,36 @@
+// Destructive restore tests: run ONLY against an isolated local database.
+// Start an isolated preview at 127.0.0.1:5174; never point this at the live site.
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const assert=require('node:assert/strict');
+const {randomUUID}=require('node:crypto');
+(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});const page=await browser.newPage();const base='http://127.0.0.1:5174';
+try{await page.goto(base+'/');const get=async path=>{const r=await page.request.get(base+path);return {status:r.status(),data:await r.json()}};
+const post=async(path,body)=>{const r=await page.request.post(base+path,{headers:{Origin:base},data:body});return {status:r.status(),data:await r.json()}};
+assert.equal((await get('/api/backup')).status,403);assert.equal((await post('/api/restore',{})).status,403);
+await page.goto(base+'/signin-with-chatgpt?return_to=/admin');await page.getByRole('tab').first().waitFor();
+let s=(await get('/api/manage')).data;assert.equal(s.sessions.length,1,'Use a fresh isolated database');const sid=s.session.id,song=s.songs.find(x=>x.status==='available');assert(song);
+const rid=randomUUID();assert.equal((await post('/api/requests',{id:rid,sessionId:sid,songId:song.id,name:'QA'})).status,200);
+const id=randomUUID();assert.equal((await post('/api/tips',{id,provider:'paypal',cents:500,sessionId:sid,requestId:rid})).status,200);
+const rank=async()=>((await get('/api/manage')).data.ranking.find(x=>x.songId===song.id));assert.equal((await rank()).total,1);
+const cmd=body=>post('/api/manage',body);
+assert.equal((await cmd({action:'tip_confirm',id,revision:0,cents:500,reference:'QA-RECEIPT',checked:false})).status,400);
+assert.equal((await cmd({action:'tip_confirm',id,revision:0,cents:500,reference:'QA-RECEIPT',checked:true})).status,200);assert.equal((await rank()).total,6);
+assert.equal((await cmd({action:'tip_confirm',id,revision:0,cents:500,reference:'QA-RECEIPT',checked:true})).status,409);assert.equal((await rank()).total,6);
+const id2=randomUUID();assert.equal((await post('/api/tips',{id:id2,provider:'paypal',cents:500,sessionId:sid,requestId:rid})).status,200);
+assert.equal((await cmd({action:'tip_confirm',id:id2,revision:0,cents:500,reference:'qa-receipt',checked:true})).status,409);
+assert.equal((await cmd({action:'tip_refund',id,revision:1,cents:200,checked:true})).status,200);assert.equal((await rank()).total,4);
+assert.equal((await cmd({action:'tip_refund',id,revision:2,cents:500,checked:true})).status,200);assert.equal((await rank()).total,1);
+const standalone=randomUUID();assert.equal((await post('/api/tips',{id:standalone,provider:'revolut',cents:1000})).status,200);assert.equal((await cmd({action:'tip_confirm',id:standalone,revision:0,cents:1000,reference:'QA-STANDALONE',checked:true})).status,200);assert.equal((await rank()).total,1);
+console.log('PASS tips: pending, confirmation, duplicate reference, revision conflict, partial/full refunds, untied tips.');
+const backup=await get('/api/backup');assert.equal(backup.status,200);assert.equal(backup.data.consistency,'transaction');const invalid=structuredClone(backup.data);invalid.session_songs[0].song_id='missing';assert.equal((await post('/api/restore?action=preview',invalid)).status,400);
+let preview=await post('/api/restore?action=preview',backup.data);assert.equal(preview.status,200,JSON.stringify(preview.data));assert.equal((await get('/api/restore?id='+preview.data.id)).status,200);
+s=(await get('/api/manage')).data;assert.equal((await cmd({action:'session_rename',sessionId:sid,sessionRevision:s.session.revision,name:'Changed after preview'})).status,200);
+assert.equal((await post('/api/restore',{id:preview.data.id,confirm:'RESTAURAR'})).status,409);assert.equal((await get('/api/manage')).data.session.name,'Changed after preview');
+preview=await post('/api/restore?action=preview',backup.data);assert.equal(preview.status,200);assert.equal((await post('/api/restore',{id:preview.data.id,confirm:'wrong'})).status,400);
+const applied=await post('/api/restore',{id:preview.data.id,confirm:'RESTAURAR'});assert.equal(applied.status,200,JSON.stringify(applied));assert.equal((await post('/api/restore',{id:preview.data.id,confirm:'RESTAURAR'})).data.alreadyApplied,true);
+const after=(await get('/api/backup')).data;for(const key of ['songs','sessions','session_songs','requests','metrics','tips','settings'])assert.deepEqual(after[key],backup.data[key],key);
+console.log('PASS backup: validation, safety copy, stale preview refusal, atomic replacement and idempotent replay.');
+const c=(await get('/api/content')).data;console.log('Content shape',Object.keys(c));
+assert.equal((await post('/api/verify',{token:'bad'})).status,400);
+console.log('PASS v0.5 isolated regression. No external messages or payments sent.');
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});

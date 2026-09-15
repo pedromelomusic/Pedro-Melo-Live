@@ -1,0 +1,3 @@
+import {admin,db,json} from '../../data';
+// Read on demand instead of recounting the database on every live poll.
+export async function GET(){if(!await admin())return json({error:'forbidden'},403);const row=await db().prepare("SELECT (SELECT COUNT(*) FROM songs) AS songs,(SELECT COUNT(*) FROM sessions) AS sessions,(SELECT COUNT(*) FROM requests) AS requests,(SELECT COUNT(*) FROM tips) AS tips,(SELECT COUNT(*) FROM subscriptions) AS contacts,(SELECT COUNT(*) FROM outbox) AS queued,(SELECT COUNT(*) FROM export_jobs WHERE state='pending') AS exports,(SELECT COUNT(*) FROM restore_jobs WHERE expires>?) AS restores").bind(Date.now()).first();return json(row)}

@@ -1,0 +1,4 @@
+"use client";
+import {Site,useSite,SocialLink} from '../site';
+export default function Page(){return <Site active="/aulas"><Lessons/></Site>}
+function Lessons(){const {t}=useSite();return <section className="subpage lessons"><p className="eyebrow">{t('AULAS DE GUITARRA','GUITAR LESSONS')}</p><h1>{t('A tua próxima','Your next')}<br/><em>{t('primeira canção.','first song.')}</em></h1><p className="lead">{t('Queres aprender guitarra? Falamos sobre o que gostavas de tocar e por onde começar.','Want to learn guitar? Let’s talk about what you’d love to play and where to start.')}</p><div className="contact-card"><p>@pedromelomusic</p><SocialLink id="whatsapp">{t('Conversar no WhatsApp','Chat on WhatsApp')}</SocialLink><SocialLink id="instagram">{t('Conversar no Instagram','Chat on Instagram')}</SocialLink></div></section>}
