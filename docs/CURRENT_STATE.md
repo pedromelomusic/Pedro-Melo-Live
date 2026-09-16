@@ -5,7 +5,7 @@
 - Repositório: `https://github.com/pedromelomusic/Pedro-Melo-Live`.
 - Produção e base estável: v0.5.1, `3a9b7a54e53a704cde568139363169b0c94503c4`.
 - `main`: exclusivamente estável/publicável. Não é alterada durante desenvolvimento.
-- `v0.6`: desenvolvimento a partir dessa base; Bloco A implementado, sem commit automático.
+- `v0.6`: Blocos A e B concluídos; Bloco C em revisão, sem commit automático.
 - Fluxo: desenvolvimento em `v0.6` → testes → commit/push → validação → aprovação de Pedro → merge em `main` → publicação da revisão aprovada de `main`.
 - Não publicar automaticamente. Não criar Sites, repositórios ou bases alternativos. Não usar `outputs` como fonte de código. Não contornar restrições de `.git`; Pedro pode fazer commit/push manualmente.
 
@@ -29,6 +29,10 @@ Bloco A: campos opcionais de repertório/evento, validação, compatibilidade de
 
 Migração validada exclusivamente numa base em memória; não aplicada à produção nem aos dados locais reais. É necessário aplicar a migração pendente antes de executar esta branch contra uma base existente. Não reinstalar/recriar a base nem reaplicar migrações antigas. Ver `docs/v0.6.md`.
 
-## Bloco B — para revisão
+## Bloco B — concluído
 
-Song Discovery implementado no working tree de `v0.6`, sobre `a88d58f`, sem commit/publicação. Pesquisa preservada, filtros opcionais, páginas de 12 e sugestões aleatórias. Testes sintéticos com 500 músicas, simulação DOM, consulta SQLite, regressões do Bloco A, TypeScript e build aprovados. QA visual a 390 px pendente por bloqueio de abertura da fixture no navegador. Ver `docs/v06-song-discovery.md`. Bloco C não iniciado.
+Song Discovery aprovado e incluído em `ba67f53b6029805e306c8b2d13815e688d9947dd`. Pesquisa, filtros opcionais, páginas de 12 e sugestões aleatórias preservados. Ver `docs/v06-song-discovery.md` para o registo do bloco.
+
+## Bloco C — para revisão
+
+Contexto compacto do evento, confirmação do pedido apenas após resposta válida, apoio opcional, original do evento e redes sociais antes do contacto opcional. Implementado sobre `ba67f53`, ainda sem commit. Regressões A/B, testes C, TypeScript e build aprovados. QA em browser com fixture sintética de 390 × 844 px; teclado físico e integração real com rede fraca continuam a requerer teste manual. Sem migração, alterações de configuração ou publicação. Ver `docs/v06-public-live-experience.md`.
