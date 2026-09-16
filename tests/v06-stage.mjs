@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {build} from 'esbuild';
+import {Window} from '../work/discovery-dom/node_modules/happy-dom/lib/index.js';
+fs.mkdirSync('work/stage',{recursive:true});
+await build({entryPoints:['app/admin/palco/model.ts'],outfile:'work/stage/model.mjs',bundle:true,platform:'node',format:'esm'});
+const {stageLists,stageFetch}=await import('../work/stage/model.mjs');
+const songs=Array.from({length:500},(_,i)=>({id:String(i),title:i===0?'Coração':'Song '+i,artist:'João',status:i===0?'playing':i===1?'played':i===2?'hidden':'available',position:i,inSetlist:i<20}));
+assert.equal(stageLists(songs).next.id,'3');assert.equal(stageLists([]).next,undefined);
+assert.equal(stageLists(songs).repertoire.length,497);
+globalThis.fetch=async()=>({ok:true,json:async()=>({})});await assert.rejects(stageFetch({action:'break'}),/ambiguous/);
+const page=fs.readFileSync('app/admin/palco/page.tsx','utf8');assert(page.includes("requireChatGPTUser('/admin/palco')"));assert(page.includes('if(!await admin())'));
+const window=new Window({url:'https://example.test/admin/palco'});
+for(const key of ['window','document','navigator','HTMLElement','HTMLInputElement','Event','MouseEvent','localStorage'])Object.defineProperty(globalThis,key,{value:key==='window'?window:window[key],configurable:true});
+let state={session:{id:'event',revision:7,name:'Concerto',archived:false},activeSessionId:'event',settings:{requestsOpen:true},now:{song:'Coração',artist:'João'},songs,ranking:Array.from({length:10},(_,i)=>({key:String(i),title:'Rank '+i,total:10-i,pending:1})),requests:Array.from({length:10},(_,i)=>({id:String(i),song:'Recent '+i,status:'pending'}))};
+let failure='',offline=false,calls=[],release;
+globalThis.fetch=async(_url,init)=>{
+ if(offline)throw new Error('offline');
+ if(init?.method==='POST'){calls.push(JSON.parse(init.body));await new Promise(r=>release=r);if(failure)return {ok:false,json:async()=>({error:failure})};const c=calls.at(-1);if(c.action==='pause')state.settings.requestsOpen=c.open;state.session.revision++;return {ok:true,json:async()=>({ok:true})};}
+ return {ok:true,json:async()=>structuredClone(state)};
+};
+await build({stdin:{contents:"import React from 'react';import {createRoot} from 'react-dom/client';import Stage from './app/admin/palco/stage';import {AdminLanguage} from './app/admin/language';export const root=createRoot(document.getElementById('root'));root.render(<AdminLanguage><Stage/></AdminLanguage>);",resolveDir:process.cwd(),loader:'tsx'},outfile:'work/stage/dom.mjs',bundle:true,format:'esm',jsx:'automatic'});
+document.body.innerHTML='<div id="root"></div>';const {root}=await import('../work/stage/dom.mjs');const tick=()=>new Promise(r=>setTimeout(r,30));await tick();await tick();
+const button=text=>[...document.querySelectorAll('button')].find(b=>b.textContent.includes(text));
+assert.equal(document.querySelectorAll('.stage-columns section:first-child li').length,5);assert.equal(document.querySelectorAll('.stage-columns section:last-child li').length,5);
+assert.equal(document.querySelectorAll('.stage-list').item(3).children.length,12);
+button('Pedidos abertos').click();button('Pedidos abertos').click();await tick();assert.equal(calls.length,1);assert.equal(calls[0].sessionRevision,7);assert.equal(calls[0].action,'pause');release();await tick();assert(button('Pedidos pausados'));
+button('Próxima').click();await tick();assert.equal(calls.at(-1).id,'3');assert.equal(calls.at(-1).status,'playing');release();await tick();
+failure='conflict';button('Terminar').click();await tick();release();await tick();assert(document.body.textContent.includes('Os dados mudaram'));assert.equal(calls.at(-1).action,'break');failure='';
+const input=document.querySelector('#stage-search');Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set.call(input,'joao');input.dispatchEvent(new window.Event('input',{bubbles:true}));await tick();assert.equal(document.querySelectorAll('.stage-list').item(3).children.length,12);button('Ver mais').click();await tick();assert.equal(document.querySelectorAll('.stage-list').item(3).children.length,24);
+button('PT → EN').click();await tick();assert(document.body.textContent.includes('Stage Mode'));assert(document.body.textContent.includes('Full management'));
+offline=true;button('Finish').click();await tick();await tick();assert(button('Next').disabled);assert(document.body.textContent.includes('Connection unavailable'));offline=false;button('Try again').click();await tick();assert(!button('Next').disabled);
+state.activeSessionId=null;button('Finish').click();await tick();release();await tick();assert(document.body.textContent.includes('No active event'));assert(button('Next').disabled);
+root.unmount();await window.happyDOM.abort();
+console.log('PASS D: protected route, 500 songs, next skips played/hidden, Top5/recent5, 12/24 rows, accent search, duplicate submit blocked, revision, pause/next/break commands, conflict refresh, no active event, PT/EN. Synthetic DOM; no real database writes.');

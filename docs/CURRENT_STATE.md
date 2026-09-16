@@ -5,7 +5,7 @@
 - Repositório: `https://github.com/pedromelomusic/Pedro-Melo-Live`.
 - Produção e base estável: v0.5.1, `3a9b7a54e53a704cde568139363169b0c94503c4`.
 - `main`: exclusivamente estável/publicável. Não é alterada durante desenvolvimento.
-- `v0.6`: Blocos A e B concluídos; Bloco C em revisão, sem commit automático.
+- `v0.6`: Blocos A e B concluídos; Bloco C concluído; Bloco D com commit autorizado após correções do QA.
 - Fluxo: desenvolvimento em `v0.6` → testes → commit/push → validação → aprovação de Pedro → merge em `main` → publicação da revisão aprovada de `main`.
 - Não publicar automaticamente. Não criar Sites, repositórios ou bases alternativos. Não usar `outputs` como fonte de código. Não contornar restrições de `.git`; Pedro pode fazer commit/push manualmente.
 
@@ -33,6 +33,10 @@ Migração validada exclusivamente numa base em memória; não aplicada à produ
 
 Song Discovery aprovado e incluído em `ba67f53b6029805e306c8b2d13815e688d9947dd`. Pesquisa, filtros opcionais, páginas de 12 e sugestões aleatórias preservados. Ver `docs/v06-song-discovery.md` para o registo do bloco.
 
-## Bloco C — para revisão
+## Bloco C — concluído
 
-Contexto compacto do evento, confirmação do pedido apenas após resposta válida, apoio opcional, original do evento e redes sociais antes do contacto opcional. Implementado sobre `ba67f53`, ainda sem commit. Regressões A/B, testes C, TypeScript e build aprovados. QA em browser com fixture sintética de 390 × 844 px; teclado físico e integração real com rede fraca continuam a requerer teste manual. Sem migração, alterações de configuração ou publicação. Ver `docs/v06-public-live-experience.md`.
+Contexto compacto do evento, confirmação do pedido apenas após resposta válida, apoio opcional, original do evento e redes sociais antes do contacto opcional. Aprovado e incluído em `27a015c9d536fbf5fef70ce3e7375ba4655c3f7c`. Regressões A/B, testes C, TypeScript e build aprovados. QA em browser com fixture sintética de 390 × 844 px; teclado físico e integração real com rede fraca continuam a requerer teste manual. Sem migração, alterações de configuração ou publicação. Ver `docs/v06-public-live-experience.md`.
+
+## Bloco D — QA corrigido
+
+Modo Palco disponível em `/admin/palco`, com a mesma autenticação e autorização do admin. Controlo de pedidos, Now Playing, terminar/intervalo, próxima do alinhamento, Top 5, cinco pedidos recentes e repertório pesquisável em páginas de 12. Gestão completa preservada. Usa apenas `/api/manage` e as revisões existentes; nenhuma migration ou alteração de infraestrutura. Ver `docs/v06-stage-mode.md`.
