@@ -23,7 +23,7 @@ export async function GET(r: Request) {
         }
     } }
     async function* output() {
-        yield '{"version":"0.4","snapshot":' + snapshot + ',"scope":' + JSON.stringify(scope) + ',';
+        yield '{"version":"0.6","snapshot":' + snapshot + ',"scope":' + JSON.stringify(scope) + ',';
         let count = 0;
         if (kind === 'backup') {
             for (const [table, columns] of [['songs', '*'], ['sessions', '*'], ['session_songs', '*'], ['metrics', '*']] as const) {

@@ -1,0 +1,23 @@
+import fs from 'node:fs';import ts from 'typescript';import assert from 'node:assert/strict';
+// Transpile pure modules to ignored work/. Server dependencies are inert stubs;
+// these tests exercise validation/parsing, not authentication or D1 delivery.
+fs.mkdirSync('work/v06-model-tests',{recursive:true});
+const compile=(source,file)=>fs.writeFileSync('work/v06-model-tests/'+file,ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText);
+compile(fs.readFileSync('app/music-metadata.ts','utf8'),'music-metadata.mjs');
+compile(fs.readFileSync('app/import-songs.ts','utf8').replace("import {allSongs,db,json,sessionById} from './data';",'const allSongs=()=>{},db=()=>{},json=()=>{},sessionById=()=>{};').replace("'./music-metadata'","'./music-metadata.mjs'"),'imports.mjs');
+compile(fs.readFileSync('app/backup-schema.ts','utf8').replace("import {validateContent} from './content';",'const validateContent=()=>({});').replace("import {defaultLinks} from './catalog';",'const defaultLinks={};').replace("'./music-metadata'","'./music-metadata.mjs'"),'backups.mjs');
+const {songMetadataSchema,eventMetadataSchema,eventLifecycle}=await import('../work/v06-model-tests/music-metadata.mjs');
+const {parseImport}=await import('../work/v06-model-tests/imports.mjs');
+const {validateBackup}=await import('../work/v06-model-tests/backups.mjs');
+assert.deepEqual(songMetadataSchema.parse({}),{genre:'',decade:null,language:'',mood:'',recommended:0});
+for(const invalid of [{decade:1995},{decade:1800},{language:'Português'},{recommended:2}])assert.equal(songMetadataSchema.safeParse(invalid).success,false);
+assert.equal(eventMetadataSchema.safeParse({featured_title:'Sina'}).success,false);
+assert.equal(eventMetadataSchema.safeParse({featured_title:'Sina',featured_artist:'Pedro Melo',featured_url:'javascript:alert(1)'}).success,false);
+const event=eventMetadataSchema.parse({venue:'Sala',city:'Braga',featured_title:'Sina',featured_artist:'Pedro Melo',featured_url:'https://example.test/sina'});
+assert.equal(eventLifecycle(null,null),'between_shows');assert.equal(eventLifecycle({id:'e',archived:0},'e'),'live');assert.equal(eventLifecycle({id:'e',archived:1},'e'),'archived');assert.equal(eventLifecycle({id:'e',archived:0},null),'upcoming');
+assert.equal(parseImport('title,artist\nCanção,Pedro')[0].decade,null);
+const song=parseImport('title,artist,genre,decade,language,mood,recommended\nCanção,Pedro,folk,1990,pt,calma,1')[0];assert.equal(song.recommended,1);assert.equal(song.decade,1990);assert.equal(parseImport(JSON.stringify([song]))[0].genre,'folk');
+assert.throws(()=>parseImport('title,artist,decade\nCanção,Pedro,banana'));
+const base={version:'0.5',complete:true,count:0,songs:[{id:'s',title:'Canção',artist:'Pedro'}],sessions:[{id:'e',name:'Evento',created:1,requests_open:1,archived:0,revision:0}],session_songs:[],requests:[],metrics:[],settings:[{key:'active_session',value:'"e"'}],tips:[]};
+assert.equal(validateBackup(base).songs[0].recommended,0);const v06={...base,version:'0.6',songs:[{id:'s',...song}],sessions:[{...base.sessions[0],...event}]};const restored=validateBackup(v06);assert.equal(restored.songs[0].genre,'folk');assert.equal(restored.sessions[0].featured_url,event.featured_url);assert.equal(restored.sessions[0].city,'Braga');
+console.log('PASS: legacy/new metadata, CSV/JSON, invalid fields/URLs, lifecycle, v0.5 and v0.6 backup validation. No user data accessed.');
