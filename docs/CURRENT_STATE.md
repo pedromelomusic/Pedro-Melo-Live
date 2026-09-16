@@ -28,3 +28,7 @@ Discord preparado como segredo, envios desativados. Make/ManyChat, agendamento e
 Bloco A: campos opcionais de repertório/evento, validação, compatibilidade de importação e backups, migração aditiva `0007_music_context.sql`. Não inclui Song Discovery, experiência pós-pedido, Modo Palco, gestão em massa ou redesign: pertencem aos blocos seguintes.
 
 Migração validada exclusivamente numa base em memória; não aplicada à produção nem aos dados locais reais. É necessário aplicar a migração pendente antes de executar esta branch contra uma base existente. Não reinstalar/recriar a base nem reaplicar migrações antigas. Ver `docs/v0.6.md`.
+
+## Bloco B — para revisão
+
+Song Discovery implementado no working tree de `v0.6`, sobre `a88d58f`, sem commit/publicação. Pesquisa preservada, filtros opcionais, páginas de 12 e sugestões aleatórias. Testes sintéticos com 500 músicas, simulação DOM, consulta SQLite, regressões do Bloco A, TypeScript e build aprovados. QA visual a 390 px pendente por bloqueio de abertura da fixture no navegador. Ver `docs/v06-song-discovery.md`. Bloco C não iniciado.
