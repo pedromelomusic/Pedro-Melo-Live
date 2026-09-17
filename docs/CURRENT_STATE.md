@@ -5,7 +5,7 @@
 - Repositório: `https://github.com/pedromelomusic/Pedro-Melo-Live`.
 - Produção e base estável: v0.5.1, `3a9b7a54e53a704cde568139363169b0c94503c4`.
 - `main`: exclusivamente estável/publicável. Não é alterada durante desenvolvimento.
-- `v0.6`: Blocos A e B concluídos; Bloco C concluído; Bloco D com commit autorizado após correções do QA.
+- `v0.6`: Blocos A–D concluídos; Bloco E implementado, com commit autorizado após três correções finais.
 - Fluxo: desenvolvimento em `v0.6` → testes → commit/push → validação → aprovação de Pedro → merge em `main` → publicação da revisão aprovada de `main`.
 - Não publicar automaticamente. Não criar Sites, repositórios ou bases alternativos. Não usar `outputs` como fonte de código. Não contornar restrições de `.git`; Pedro pode fazer commit/push manualmente.
 
@@ -40,3 +40,7 @@ Contexto compacto do evento, confirmação do pedido apenas após resposta váli
 ## Bloco D — QA corrigido
 
 Modo Palco disponível em `/admin/palco`, com a mesma autenticação e autorização do admin. Controlo de pedidos, Now Playing, terminar/intervalo, próxima do alinhamento, Top 5, cinco pedidos recentes e repertório pesquisável em páginas de 12. Gestão completa preservada. Usa apenas `/api/manage` e as revisões existentes; nenhuma migration ou alteração de infraestrutura. Ver `docs/v06-stage-mode.md`.
+
+## Bloco E — correções finais e commit autorizado
+
+Gestão avançada em `/admin/gestao`, sobre HEAD `0018edb57c1ea0ee9a5d258a2a929fcb11418939`: catálogo global/evento, filtros, páginas de vinte, operações em massa, metadata e duplicação inativa sem histórico. Artwork opcional no R2 existente, sem schema/migration nem apresentação pública. Sem publicação; QA visual pendente por restrição do browser. Ver `docs/v06-advanced-management.md` para limites e QA.
