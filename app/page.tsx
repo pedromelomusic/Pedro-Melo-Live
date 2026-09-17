@@ -1,29 +1,426 @@
 "use client";
-import {useRef,useState} from 'react';
-import {ProjectPhoto} from './project-photo';
-import {SongPicker} from './song-picker';
-import {Site,useSite} from './site';
-import {EventContext,RequestReceipt,SocialChannels} from './live-experience';
-import type {ReceivedRequest} from './live-experience';
-import {confirmSongRequest,RequestNotConfirmed} from './request-confirmation';
-export default function Home(){return <Site active="/"><Live/></Site>}
-function Live(){const {t,live,online,loaded,href,links,track}=useSite();const [selected,Select]=useState(''),[message,M]=useState(''),[busy,B]=useState(false),[received,R]=useState<ReceivedRequest|null>(null);const sending=useRef(false);const sessionId=useRef(live?.session?.id);sessionId.current=live?.session?.id;const pending=useRef<{key:string,id:string}|null>(null);const songs=live?.songs||[];const available=songs.filter((s:any)=>s.status==='available');const canRequest=online&&live?.settings.requestsOpen&&available.some((s:any)=>s.id===selected);
-async function submit(e:any){
-  e.preventDefault();if(sending.current||!canRequest)return;
-  sending.current=true;B(true);M('');R(null);
-  try{
-  const f=e.currentTarget,d=new FormData(f),event=live.session,song=available.find((s:any)=>s.id===selected);
-  const name=String(d.get('name')||''),key=JSON.stringify([event.id,selected,name]);
-  if(pending.current?.key!==key)pending.current={key,id:crypto.randomUUID()};
-  const requestId=pending.current.id;
-    await confirmSongRequest({sessionId:event.id,songId:selected,name,website:String(d.get('website')||''),id:requestId});
-    pending.current=null;
-    if(sessionId.current!==event.id){M(t('O pedido foi recebido no evento anterior. O evento apresentado mudou.','Your request was received for the previous event. The displayed event has changed.'));return;}
-    R({id:requestId,sessionId:event.id,title:song.title,artist:song.artist,featuredOriginal:event.featuredOriginal||null});
-    M(t('Pedido recebido!','Request received!'));f.reset();Select('');
-  }catch(error){
-    const code=error instanceof RequestNotConfirmed?error.code:'network';
-    M(code==='session_changed'?t('O concerto mudou. Atualiza a página antes de pedir.','The show changed. Refresh before requesting.'):code==='unavailable_song'?t('Esta canção já não está disponível. Escolhe outra.','This song is no longer available. Pick another.'):code==='rate'?t('Já recebemos vários pedidos teus. Espera um minuto.','We’ve received several requests from you. Please wait a minute.'):code==='paused'?t('Os pedidos foram entretanto pausados.','Requests have just been paused.'):t('Não foi possível confirmar o pedido. Tenta novamente: a mesma tentativa não será duplicada.','Your request could not be confirmed. Try again: the same attempt will not be duplicated.'));
-  }finally{sending.current=false;B(false);}
+
+import { useRef, useState } from "react";
+import { ProjectPhoto } from "./project-photo";
+import { SongPicker } from "./song-picker";
+import { Site, useSite } from "./site";
+import {
+  EventContext,
+  RequestReceipt,
+  SocialChannels,
+} from "./live-experience";
+import type { ReceivedRequest } from "./live-experience";
+import {
+  confirmSongRequest,
+  RequestNotConfirmed,
+} from "./request-confirmation";
+
+export default function Home() {
+  return (
+    <Site active="/">
+      <Live />
+    </Site>
+  );
 }
-return <><section className="hero"><div className="intro"><p className="eyebrow">{!live?.session?.isActive?t('A MÚSICA CONTINUA','THE MUSIC CONTINUES'):live?.session?.mode==='busking'?t('NA RUA. AQUI. CONTIGO.','ON THE STREET. HERE. WITH YOU.'):live?.session?.mode==='twitch'?t('EM DIRETO. DE ONDE ESTIVERES.','LIVE. WHEREVER YOU ARE.'):t('AO VIVO. AQUI. CONTIGO.','LIVE. HERE. WITH YOU.')}</p><h1>{t('A próxima','The next')}<br/><em>{t('música','song')}</em><br/>{t('é contigo.','is yours.')}</h1><p className="lead">{t('Escolhe uma canção do meu repertório. Eu trato da guitarra e das histórias.','Pick a song from my repertoire. I’ll bring the guitar and the stories.')}</p><a className="textlink" onClick={()=>track("click:projects")} href={href("/projetos")}>{t('Conhece o meu universo','Step into my universe')} ↗</a></div><div className="livepanel"><EventContext/><div className="now"><div className="eyebrow">◉ {t('AGORA A TOCAR','NOW PLAYING')}</div><h2>{live?.now?.song||t('Entre canções','Between songs')}</h2><p>{live?.now?.artist||t('O próximo momento está a chegar.','The next moment is on its way.')}</p>{live?.now?.song&&<a className="lyrics-link" href={href("/letra")}>{t('Acompanhar a letra','Follow the lyrics')} →</a>}<div className="rule"/></div><div className="request"><h2>{t('O que queres ouvir?','What would you like to hear?')}</h2><form onSubmit={submit}><SongPicker key={live?.session?.id || "loading"} songs={available} value={selected} onChange={Select} disabled={!online||busy} loading={!loaded} offline={loaded && !online} paused={loaded && live?.settings.requestsOpen===false}/><label htmlFor="name">{t('O teu nome (opcional)','Your name (optional)')}</label><input disabled={busy} id="name" name="name" maxLength={60} placeholder={t('Como te chamas?','What’s your name?')}/><input name="website" tabIndex={-1} autoComplete="off" className="trap" aria-hidden="true"/><button className="primary" disabled={busy||!canRequest}>{busy?t('A enviar…','Sending…'):live?.settings.requestsOpen===false?t('Pedidos em pausa','Requests paused'):t('Pedir uma música ♫','Request a song ♫')}</button><p className="fine">{t('Sem conta. Só música. O pedido é uma sugestão; não garante que a canção seja tocada.','No account. Just music. A request is a suggestion, not a guarantee.')}</p><p className="feedback" role="status">{!online?(loaded?t('Ligação indisponível. A tentar novamente…','Connection unavailable. Retrying…'):t('A ligar ao concerto…','Connecting to the show…')):message||(available.length===0?t('Sem canções disponíveis para pedir neste momento.','No songs available to request right now.'):'')}</p></form>{received?.sessionId===live?.session?.id&&received?<RequestReceipt request={received}/>:<aside className="support-invite"><h3>{t('Apoiar a música','Support the music')}</h3><p>{t('Pedir músicas é gratuito. Se quiseres, podes deixar uma tip opcional.','Song requests are free. If you wish, you can leave an optional tip.')}</p><a className="primary support-button" onClick={()=>track('click:support')} href={href('/apoio')}>{t('♡ Deixar uma tip','♡ Leave a tip')}</a><small>PayPal · Revolut · MB WAY</small></aside>}{songs.filter((s:any)=>s.status==='reserved').length>0&&<div className="reserved"><h3>{t('Guardadas para mais tarde','Saved for later')}</h3><p className="fine">{t('Estas já estão nos meus planos.','These are already in my plans.')}</p>{songs.filter((s:any)=>s.status==='reserved').map((s:any)=><p key={s.id}>{s.title}<small>{s.artist}</small></p>)}</div>}</div></div></section><section className="artist-signature"><ProjectPhoto slot="home" alt="Pedro Melo"/><div><h2>Pedro Melo</h2><p>{t("Músico, compositor e professor de guitarra.","Musician, songwriter and guitar teacher.")}</p><p>{t("Entre palcos e canções, há mais histórias para descobrir.","Between stages and songs, there are more stories to discover.")}</p><a className="textlink" onClick={()=>track("click:projects")} href={href("/projetos")}>{t("Descobre o meu trabalho","Discover my work")} →</a></div></section><section className="stay-invite"><div><h2>{t("Até à próxima canção.","Until the next song.")}</h2><p>{t("Segue os projetos e descobre como receber novidades de música e concertos.","Follow the projects and discover how to hear about new music and shows.")}</p><SocialChannels/></div><a className="textlink" onClick={()=>track("click:community")} href={href("/comunidade")}>{t("Ficar por perto","Stay in touch")} →</a></section></>}
+
+function Live() {
+  const { t, live, online, loaded, href, links, track } = useSite();
+
+  const [selected, Select] = useState("");
+  const [message, M] = useState("");
+  const [busy, B] = useState(false);
+  const [received, R] = useState<ReceivedRequest | null>(null);
+
+  const sending = useRef(false);
+  const sessionId = useRef(live?.session?.id);
+  sessionId.current = live?.session?.id;
+
+  const pending = useRef<{ key: string; id: string } | null>(null);
+
+  const songs = live?.songs || [];
+  const available = songs.filter((s: any) => s.status === "available");
+
+  const canRequest =
+    online &&
+    live?.settings.requestsOpen &&
+    available.some((s: any) => s.id === selected);
+
+  async function submit(e: any) {
+    e.preventDefault();
+
+    if (sending.current || !canRequest) return;
+
+    sending.current = true;
+    B(true);
+    M("");
+    R(null);
+
+    try {
+      const f = e.currentTarget;
+      const d = new FormData(f);
+      const event = live.session;
+      const song = available.find((s: any) => s.id === selected);
+
+      const name = String(d.get("name") || "");
+      const key = JSON.stringify([event.id, selected, name]);
+
+      if (pending.current?.key !== key) {
+        pending.current = {
+          key,
+          id: crypto.randomUUID(),
+        };
+      }
+
+      const requestId = pending.current.id;
+
+      await confirmSongRequest({
+        sessionId: event.id,
+        songId: selected,
+        name,
+        website: String(d.get("website") || ""),
+        id: requestId,
+      });
+
+      pending.current = null;
+
+      if (sessionId.current !== event.id) {
+        M(
+          t(
+            "O pedido foi recebido no evento anterior. O evento apresentado mudou.",
+            "Your request was received for the previous event. The displayed event has changed.",
+          ),
+        );
+        return;
+      }
+
+      R({
+        id: requestId,
+        sessionId: event.id,
+        title: song.title,
+        artist: song.artist,
+        featuredOriginal: event.featuredOriginal || null,
+      });
+
+      M(t("Pedido recebido!", "Request received!"));
+      f.reset();
+      Select("");
+    } catch (error) {
+      const code =
+        error instanceof RequestNotConfirmed ? error.code : "network";
+
+      M(
+        code === "session_changed"
+          ? t(
+              "O concerto mudou. Atualiza a página antes de pedir.",
+              "The show changed. Refresh before requesting.",
+            )
+          : code === "unavailable_song"
+            ? t(
+                "Esta canção já não está disponível. Escolhe outra.",
+                "This song is no longer available. Pick another.",
+              )
+            : code === "rate"
+              ? t(
+                  "Já recebemos vários pedidos teus. Espera um minuto.",
+                  "We’ve received several requests from you. Please wait a minute.",
+                )
+              : code === "paused"
+                ? t(
+                    "Os pedidos foram entretanto pausados.",
+                    "Requests have just been paused.",
+                  )
+                : t(
+                    "Não foi possível confirmar o pedido. Tenta novamente: a mesma tentativa não será duplicada.",
+                    "Your request could not be confirmed. Try again: the same attempt will not be duplicated.",
+                  ),
+      );
+    } finally {
+      sending.current = false;
+      B(false);
+    }
+  }
+
+  return (
+    <>
+      <section className="hero">
+        <div className="intro">
+          <p className="eyebrow">
+            {!live?.session?.isActive
+              ? t("A MÚSICA CONTINUA", "THE MUSIC CONTINUES")
+              : live?.session?.mode === "busking"
+                ? t(
+                    "NA RUA. AQUI. CONTIGO.",
+                    "ON THE STREET. HERE. WITH YOU.",
+                  )
+                : live?.session?.mode === "twitch"
+                  ? t(
+                      "EM DIRETO. DE ONDE ESTIVERES.",
+                      "LIVE. WHEREVER YOU ARE.",
+                    )
+                  : t(
+                      "AO VIVO. AQUI. CONTIGO.",
+                      "LIVE. HERE. WITH YOU.",
+                    )}
+          </p>
+
+          <h1>
+            {t("A próxima", "The next")}
+            <br />
+            <em>{t("música", "song")}</em>
+            <br />
+            {t("é contigo.", "is yours.")}
+          </h1>
+
+          <p className="lead">
+            {t(
+              "Escolhe uma canção do meu repertório. Eu trato da guitarra e das histórias.",
+              "Pick a song from my repertoire. I’ll bring the guitar and the stories.",
+            )}
+          </p>
+
+          <a
+            className="textlink"
+            onClick={() => track("click:projects")}
+            href={href("/projetos")}
+          >
+            {t("Conhece o meu universo", "Step into my universe")} ↗
+          </a>
+        </div>
+
+        <div className="livepanel">
+          <EventContext />
+
+          <div className="now">
+            <div className="eyebrow">
+              ◉ {t("AGORA A TOCAR", "NOW PLAYING")}
+            </div>
+
+            <h2>
+              {live?.now?.song || t("Entre canções", "Between songs")}
+            </h2>
+
+            <p>
+              {live?.now?.artist ||
+                t(
+                  "O próximo momento está a chegar.",
+                  "The next moment is on its way.",
+                )}
+            </p>
+
+            {live?.now?.song && (
+              <a className="lyrics-link" href={href("/letra")}>
+                {t("Acompanhar a letra", "Follow the lyrics")} →
+              </a>
+            )}
+
+            <div className="rule" />
+          </div>
+        </div>
+      </section>
+
+      <section className="request-full">
+        <div className="request">
+          <h2>{t("O que queres ouvir?", "What would you like to hear?")}</h2>
+
+          <form onSubmit={submit}>
+            <SongPicker
+              key={live?.session?.id || "loading"}
+              songs={available}
+              value={selected}
+              onChange={Select}
+              disabled={!online || busy}
+              loading={!loaded}
+              offline={loaded && !online}
+              paused={loaded && live?.settings.requestsOpen === false}
+            />
+
+            <label htmlFor="name">
+              {t("O teu nome (opcional)", "Your name (optional)")}
+            </label>
+
+            <input
+              disabled={busy}
+              id="name"
+              name="name"
+              maxLength={60}
+              placeholder={t("Como te chamas?", "What’s your name?")}
+            />
+
+            <input
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              className="trap"
+              aria-hidden="true"
+            />
+
+            <button className="primary" disabled={busy || !canRequest}>
+              {busy
+                ? t("A enviar…", "Sending…")
+                : live?.settings.requestsOpen === false
+                  ? t("Pedidos em pausa", "Requests paused")
+                  : t("Pedir uma música ♫", "Request a song ♫")}
+            </button>
+
+            <p className="fine">
+              {t(
+                "Sem conta. Só música. O pedido é uma sugestão; não garante que a canção seja tocada.",
+                "No account. Just music. A request is a suggestion, not a guarantee.",
+              )}
+            </p>
+
+            <p className="feedback" role="status">
+              {!online
+                ? loaded
+                  ? t(
+                      "Ligação indisponível. A tentar novamente…",
+                      "Connection unavailable. Retrying…",
+                    )
+                  : t(
+                      "A ligar ao concerto…",
+                      "Connecting to the show…",
+                    )
+                : message ||
+                  (available.length === 0
+                    ? t(
+                        "Sem canções disponíveis para pedir neste momento.",
+                        "No songs available to request right now.",
+                      )
+                    : "")}
+            </p>
+          </form>
+
+          {received?.sessionId === live?.session?.id && received ? (
+            <RequestReceipt request={received} />
+          ) : (
+            <aside className="support-invite">
+              <h3>{t("Apoiar a música", "Support the music")}</h3>
+
+              <p>
+                {t(
+                  "Pedir músicas é gratuito. Se quiseres, podes deixar uma tip opcional.",
+                  "Song requests are free. If you wish, you can leave an optional tip.",
+                )}
+              </p>
+
+              <a
+                className="primary support-button"
+                onClick={() => track("click:support")}
+                href={href("/apoio")}
+              >
+                {t("♡ Deixar uma tip", "♡ Leave a tip")}
+              </a>
+
+              <small>PayPal · Revolut · MB WAY</small>
+            </aside>
+          )}
+
+          {songs.filter((s: any) => s.status === "reserved").length > 0 && (
+            <div className="reserved">
+              <h3>
+                {t(
+                  "Guardadas para mais tarde",
+                  "Saved for later",
+                )}
+              </h3>
+
+              <p className="fine">
+                {t(
+                  "Estas já estão nos meus planos.",
+                  "These are already in my plans.",
+                )}
+              </p>
+
+              {songs
+                .filter((s: any) => s.status === "reserved")
+                .map((s: any) => (
+                  <p key={s.id}>
+                    {s.title}
+                    <small>{s.artist}</small>
+                  </p>
+                ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="artist-signature artist-signature-live">
+        <ProjectPhoto slot="home" alt="Pedro Melo" />
+
+        <div>
+          <p className="eyebrow">
+            {t("PEDRO MELO", "PEDRO MELO")}
+          </p>
+
+          <h2>
+            {t(
+              "Até à próxima canção.",
+              "Until the next song.",
+            )}
+          </h2>
+
+          <p>
+            {t(
+              "Músico, compositor e professor de guitarra. Se quiseres continuar deste lado depois do concerto:",
+              "Musician, songwriter and guitar teacher. If you'd like to stay around after the show:",
+            )}
+          </p>
+
+          <div className="artist-signature-links">
+            <a
+              onClick={() => track("click:spotify")}
+              href={links.spotify}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t("Ouvir música", "Listen to music")}
+            </a>
+
+            <a
+              onClick={() => track("click:projects")}
+              href={href("/projetos")}
+            >
+              {t(
+                "Conhecer os projetos",
+                "Explore the projects",
+              )}
+            </a>
+
+            <a
+              onClick={() => track("click:lessons")}
+              href={href("/aulas")}
+            >
+              {t(
+                "Aulas de guitarra",
+                "Guitar lessons",
+              )}
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="stay-invite">
+        <div>
+          <h2>{t("Fica por perto.", "Stay close.")}</h2>
+
+          <p>
+            {t(
+              "Segue os projetos e descobre como receber novidades de música e concertos.",
+              "Follow the projects and discover how to hear about new music and shows.",
+            )}
+          </p>
+
+          <SocialChannels />
+        </div>
+
+        <a
+          className="textlink"
+          onClick={() => track("click:community")}
+          href={href("/comunidade")}
+        >
+          {t("Comunidade e novidades.", "Community & Updates")} →
+        </a>
+      </section>
+    </>
+  );
+}
