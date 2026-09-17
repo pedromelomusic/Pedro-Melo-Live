@@ -166,3 +166,17 @@ ol.stage-list>li::before { counter-increment:track; content:counter(track,decima
 .now,.p1,.media-player,.record-card { --ring:#d8e5a4; }
 
 .song-artwork-thumbnail{width:44px;height:44px;object-fit:cover;flex-shrink:0;border-radius:2px}.song-artwork-thumbnail[hidden]{display:none}.song-option-copy{flex:1;min-width:0;overflow-wrap:anywhere}
+
+/* Optional photography: below the live interaction, never a required placeholder. */
+.project-photo { display:block; width:100%; height:auto; max-height:32rem; object-fit:cover; object-position:center; margin:1.5rem 0; }
+.project-photo[hidden] { display:none; }
+.artist-signature { display:flex; align-items:center; gap:2rem; padding-block:2.5rem; border-top:1px solid var(--line); }
+.artist-signature .photo-home { width:clamp(6rem,24vw,12rem); aspect-ratio:4/5; flex-shrink:0; }
+.artist-signature>div { min-width:0; }
+.photo-giants { aspect-ratio:21/9; }
+.photo-pete { border-bottom:4px solid #aaff44; }
+.photo-editor { min-width:0; margin-block:1rem; }
+.photo-editor img { display:block; max-width:100%; max-height:14rem; margin-block:1rem; }
+.photo-editor input { max-width:100%; }
+.photo-feedback { min-height:3em; }
+@media(max-width:540px) { .artist-signature { gap:1rem; align-items:flex-start; } .artist-signature h2 { font-size:1.6rem; } }
