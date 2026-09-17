@@ -1,6 +1,7 @@
 "use client";
 import {useMemo, useRef, useState} from 'react';
 import {useSite} from './site';
+import {SongArtworkThumbnail} from './song-artwork-thumbnail';
 import {discoverSongs, discoveryOptions, EMPTY_FILTERS, indexSongs, normalizeSongText, PAGE_SIZE, surpriseSong} from './song-discovery';
 import type {DiscoveryFilters, DiscoverySong} from './song-discovery';
 export {normalizeSongText} from './song-discovery';
@@ -42,7 +43,7 @@ export function SongPicker({songs, value, onChange, disabled, loading = false, o
         {Object.values(options).some(items => items.length > 1) && <button type="button" aria-expanded={exploring} aria-controls="discovery-filters" onClick={() => setExploring(!exploring)}>{t('Explorar', 'Explore')}</button>}
         <button type="button" onClick={() => {setBrowsing(true); setPopular(false); setPage(0);}}>{t('Ver músicas', 'Browse songs')}</button>
         {index.some(row => (row.song.requestCount || 0) > 0) && <button type="button" aria-pressed={popular} onClick={() => {setPopular(!popular); setPage(0);}}>{t('Mais pedidas', 'Most requested')}</button>}
-        <button type="button" onClick={suggest} disabled={blocked}>🎲 {t('Surpreende-me', 'Surprise me')}</button>
+        <button type="button" className="discovery-surprise" onClick={suggest} disabled={blocked}>🎲 {t('Surpreende-me', 'Surprise me')}</button>
       </div>
       {exploring && <div className="discovery-filters" id="discovery-filters">{(Object.keys(labels) as (keyof DiscoveryFilters)[]).filter(field => options[field].length > 1 || filters[field]).map(field => <label key={field} htmlFor={'discover-' + field}>{labels[field]}<select id={'discover-' + field} value={filters[field]} onChange={e => {setFilters({...filters, [field]: e.target.value}); setPage(0);}}>
         <option value="">{t('Todos', 'All')}</option>
@@ -57,7 +58,7 @@ export function SongPicker({songs, value, onChange, disabled, loading = false, o
       {popular && <p className="picker-count">{t('Pedidos recebidos neste evento, sem votos de tips.', 'Requests received at this event, excluding tip votes.')}</p>}
       <p className="picker-count" role="status">{active ? (filtered.length ? `${currentPage * PAGE_SIZE + 1}–${Math.min((currentPage + 1) * PAGE_SIZE, filtered.length)} / ${filtered.length}` : t('Nenhuma música encontrada. Experimenta outra pesquisa ou limpa os filtros.', 'No songs found. Try another search or clear the filters.')) : t('Pesquisa, explora ou deixa a sorte escolher.', 'Search, explore or let chance choose.')}</p>
       <div id="song-results" ref={results} tabIndex={-1} role="group" aria-label={t('Resultados de músicas', 'Song results')} className={visible.length ? 'song-options' : undefined}>
-        {visible.map(song => <button type="button" key={song.id} className={'song-option ' + (song.id === value ? 'chosen' : '')} aria-pressed={song.id === value} disabled={blocked} onClick={() => onChange(song.id)}><span><strong>{song.title}</strong><small>{song.artist}</small></span><span aria-hidden="true">{song.id === value ? '✓' : '+'}</span></button>)}
+        {visible.map(song => <button type="button" key={song.id} className={'song-option ' + (song.id === value ? 'chosen' : '')} aria-pressed={song.id === value} disabled={blocked} onClick={() => onChange(song.id)}><SongArtworkThumbnail id={song.id}/><span className="song-option-copy"><strong>{song.title}</strong><small>{song.artist}</small></span><span aria-hidden="true">{song.id === value ? '✓' : '+'}</span></button>)}
       </div>
       {active && filtered.length > PAGE_SIZE && <nav className="discovery-actions" aria-label={t('Páginas de músicas', 'Song pages')}><button type="button" disabled={currentPage === 0} onClick={() => move(currentPage - 1)}>{t('Anterior', 'Previous')}</button><button type="button" disabled={(currentPage + 1) * PAGE_SIZE >= filtered.length} onClick={() => move(currentPage + 1)}>{t('Ver mais', 'Show more')}</button></nav>}
       {chosen && <p className="chosen-song" role="status">{t('A tua escolha:', 'Your choice:')} <strong>{chosen.title} — {chosen.artist}</strong></p>}
