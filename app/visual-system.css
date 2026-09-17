@@ -180,3 +180,8 @@ ol.stage-list>li::before { counter-increment:track; content:counter(track,decima
 .photo-editor input { max-width:100%; }
 .photo-feedback { min-height:3em; }
 @media(max-width:540px) { .artist-signature { gap:1rem; align-items:flex-start; } .artist-signature h2 { font-size:1.6rem; } }
+
+.analytics-counts { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,16rem),1fr)); gap:0 2rem; }
+.analytics-counts>div,.analytics-songs li { display:flex; justify-content:space-between; gap:1rem; padding:.75rem 0; border-bottom:1px solid var(--line); }
+.analytics-counts dd { margin:0; font-weight:700; font-variant-numeric:tabular-nums; }
+.analytics-counts dt,.analytics-songs span { min-width:0; overflow-wrap:anywhere; }

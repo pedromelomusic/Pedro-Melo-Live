@@ -1,6 +1,6 @@
 import { db, json, sameOrigin, sessionById } from '../../data';
 import { limit, metricQuery } from '../../operations';
-const allowed = ['view:/projetos/pedro','view:/projetos/giants','view:/projetos/pete','view:/apoio','view:/', 'view:/projetos', 'view:/aulas', 'view:/letra', 'view:/comunidade', 'qr_open', 'click:spotify', 'click:instagram', 'click:youtube', 'click:twitch', 'click:whatsapp', 'click:pedro', 'click:pete', 'click:giants', 'click:crowdfunding'];
+const allowed = ['click:discord','click:featured-original','click:support','click:community','click:lessons','click:projects','click:project:pedro','click:project:giants','click:project:pete','view:/projetos/pedro','view:/projetos/giants','view:/projetos/pete','view:/apoio','view:/', 'view:/projetos', 'view:/aulas', 'view:/letra', 'view:/comunidade', 'qr_open', 'click:spotify', 'click:instagram', 'click:youtube', 'click:twitch', 'click:whatsapp', 'click:pedro', 'click:pete', 'click:giants', 'click:crowdfunding'];
 export async function POST(r: Request) { if (!sameOrigin(r))
     return json({ error: 'origin' }, 403); try {
     const raw = await r.text();

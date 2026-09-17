@@ -1,3 +1,4 @@
+import {analyticsQueries} from './analytics';
 import {cleanupRestores} from './backups';
 import { cleanupExports } from './export-jobs';
 import { env } from 'cloudflare:workers';
@@ -51,9 +52,9 @@ export function enqueueQueries(event: string, payload: any, id: string, subscrip
         continue;
     out.push(db().prepare('INSERT OR IGNORE INTO outbox(id,destination,event,payload,subscription_id,created) VALUES (?,?,?,?,?,?)').bind(destination + ':' + id, destination, event, JSON.stringify(payload), subscriptionId, Date.now()));
 } return out; }
-export async function operationsState(sessionId: string) { const d = db(), c = integrationConfig(); const [metrics, queue, last] = await Promise.all([d.prepare('SELECT event,SUM(count) AS count FROM metrics WHERE session_id=? GROUP BY event ORDER BY event').bind(sessionId).all(), d.prepare('SELECT destination,COUNT(*) AS pending,SUM(CASE WHEN attempts>=8 THEN 1 ELSE 0 END) AS failed FROM outbox GROUP BY destination').all(), d.prepare("SELECT value FROM settings WHERE key='maintenance_completed'").first<{
+export async function operationsState(sessionId: string) { const d = db(), c = integrationConfig(); const [metrics, queue, last, tips, contacts, period] = await Promise.all([d.prepare('SELECT event,SUM(count) AS count FROM metrics WHERE session_id=? GROUP BY event ORDER BY event').bind(sessionId).all(), d.prepare('SELECT destination,COUNT(*) AS pending,SUM(CASE WHEN attempts>=8 THEN 1 ELSE 0 END) AS failed FROM outbox GROUP BY destination').all(), d.prepare("SELECT value FROM settings WHERE key='maintenance_completed'").first<{
         value: string;
-    }>()]); return { eventUrl: eventUrl(sessionId), metrics: metrics.results, retention, lastCleanup: last ? Number(last.value) : null, integrations: { make: !!c.make, discord: !!c.discord, channels: c.channels, enabled: c.dispatch, queue: queue.results } }; }
+    }>(), d.prepare(analyticsQueries.tips).bind(sessionId).first(), d.prepare(analyticsQueries.contacts).bind(sessionId,Date.now()).first(), d.prepare(analyticsQueries.period).bind(sessionId).first()]); return { analytics:{tips,contacts,period}, eventUrl: eventUrl(sessionId), metrics: metrics.results, retention, lastCleanup: last ? Number(last.value) : null, integrations: { make: !!c.make, discord: !!c.discord, channels: c.channels, enabled: c.dispatch, queue: queue.results } }; }
 export async function copySetlist(b: any) {
     if (b.action !== 'setlist_copy')
         return null;
